@@ -1,4 +1,4 @@
-<html>
+<!--<html>
 <style>
 table,td,th{
   border:1px solid black;
@@ -43,5 +43,171 @@ table,td,th{
     var a=10;
     alert(a);
 </script>
+</body>
+</html>-->
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Employee Search</title>
+    
+</head>
+<body>
+<h2>Search for an Employee:</h2>
+
+<div class="form-container">
+    <div class="form-group">
+        <label id="empIdLabel" for="empId">EmpID:</label>
+        <input type="text" id="empId">
+    </div>
+    <div class="form-group">
+        <label for="designation">Designation:</label>
+        <input type="text" id="designation">
+    </div>
+    <div class="form-group">
+        <label for="age">Age:</label>
+        <input type="text" id="age">
+    </div>
+    <div class="form-group">
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName">
+    </div>
+    <div class="form-group">
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName">
+    </div>
+    <div class="form-group">
+        <label for="contact">Contact:</label>
+        <input type="text" id="contact">
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="text" id="email">
+    </div>
+</div>
+
+<button "searchBtn" onclick="searchEmployee()">Search</button>
+
+<p class="error-message" id="errorMsg"></p>
+
+<table id="employeeTable" border="2px" >
+    <thead>
+        <tr>
+            <th>Employee ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Designation</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Age</th>
+
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<script >
+    let employees = [];
+
+    fetch('employees.csv')
+        .then(response => response.text())
+        .then(csv => {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            employees = lines.slice(1).map(line => {
+                const values = line.split(',').map(v => v.trim());
+                const obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i];
+                });
+                return obj;
+            });
+        })
+        .catch(error => console.error('Error loading CSV:', error));
+
+    function searchEmployee() {
+        const empId = document.getElementById("empId").value.trim();
+        const fName = document.getElementById("firstName").value.trim();
+        const lName = document.getElementById("lastName").value.trim();
+        const desig = document.getElementById("designation").value.trim();
+        const contact = document.getElementById("contact").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const ageInput = document.getElementById("age").value.trim();
+
+
+        const errorMsg = document.getElementById("errorMsg");
+        const tableBody = document.getElementById("employeeTable").getElementsByTagName("tbody")[0];
+        tableBody.innerHTML = "";
+        errorMsg.textContent = "";
+
+        if (!empId && !fName && !lName && !desig && !contact && !email && !ageInput) {
+            //errorMsg.textContent = "Please enter any value for searching.";
+            var alertForNullSearch = "Please enter any value for searching.";
+            alert(alertForNullSearch);
+
+            return;
+        }
+
+        // Case-insensitive alphabet 
+        const alphaRegex = /^[a-z\s]+$/i;
+
+        if (empId && !empId.toUpperCase().startsWith("TMF")) {
+            errorMsg.textContent = "Employee ID must always start with 'TMF'.";
+            return;
+        }
+        if (fName && !alphaRegex.test(fName)) {
+            errorMsg.textContent = "First Name should contain only letters.";
+            return;
+        }
+        if (lName && !alphaRegex.test(lName)) {
+            errorMsg.textContent = "Last Name should contain only letters.";
+            return;
+        }
+        if (desig && !alphaRegex.test(desig)) {
+            errorMsg.textContent = "Designation should contain only letters.";
+            return;
+        }
+        if (email && !email.includes("@")) {
+            errorMsg.textContent = "Email must contain '@' symbol.";
+            return;
+        }
+        if (ageInput && isNaN(ageInput)) {
+            errorMsg.textContent = "Please enter a valid numeric age.";
+            return;
+        }
+
+        const results = employees.filter(emp => {
+            return (!empId || emp.id.toLowerCase().includes(empId.toLowerCase())) &&
+                   (!fName || emp.firstName.toLowerCase().includes(fName.toLowerCase())) &&
+                   (!lName || emp.lastName.toLowerCase().includes(lName.toLowerCase())) &&
+                   (!desig || emp.designation.toLowerCase().includes(desig.toLowerCase())) &&
+                   (!contact || emp.contact.includes(contact)) &&
+                   (!email || emp.email.toLowerCase().includes(email.toLowerCase())) &&
+                   (!ageInput || emp.age == ageInput);
+        });
+
+        if (results.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6">No employee found</td></tr>`;
+        } else { 
+            results.forEach(emp => { 
+                const row = tableBody.insertRow();
+                
+                row.innerHTML =`<td>${emp.id}</td>
+                                 <td>${emp.firstName}</td>
+                                 <td>${emp.lastName}</td>
+                                 <td>${emp.designation}</td>
+                                 <td>${emp.contact}</td>
+                                 <td>${emp.email}</td>
+                                 <td>${emp.age}</td>`;
+            });
+        }
+
+        const countRow = tableBody.insertRow();
+        countRow.innerHTML = `<strong>Total Employees Found: ${results.length}</strong>`;
+    }
+    
+</script>
+
 </body>
 </html>
